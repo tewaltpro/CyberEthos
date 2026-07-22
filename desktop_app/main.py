@@ -140,7 +140,7 @@ class CyberEthosApp:
         )
 
         self.tray = QSystemTrayIcon()
-        self.tray.setIcon(QIcon.fromTheme("security-medium"))
+        self.tray.setIcon(QIcon(str(APP_DIR / "icon.ico")))
         self.tray.setToolTip("CyberEthos")
         self.build_tray_menu()
         self.tray.show()

@@ -33,6 +33,8 @@ jobs:
           pyinstaller --onefile --noconsole --icon=icon.ico `
             --add-data "quotes.json;." `
             --add-data "affirmations.json;." `
+            --add-data "resources;resources" `
+            --add-data "icon.ico;." `
             --name CyberEthos main.py
 
       - name: Upload exe artifact
