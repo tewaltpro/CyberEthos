@@ -1,0 +1,78 @@
+name: Build and Release CyberEthos
+
+on:
+  push:
+    tags:
+      - "v*"          # push a tag like v1.0.0 to trigger a release build
+  workflow_dispatch:    # or trigger manually from the Actions tab
+
+permissions:
+  contents: write   # required so the release job can create a Release and upload files
+
+jobs:
+  build-desktop-app:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: desktop_app
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build exe
+        working-directory: desktop_app
+        run: |
+          pyinstaller --onefile --noconsole --icon=icon.ico `
+            --add-data "quotes.json;." `
+            --add-data "affirmations.json;." `
+            --name CyberEthos main.py
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CyberEthos-windows-exe
+          path: desktop_app/dist/CyberEthos.exe
+
+  zip-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zip browser extension
+        run: |
+          cd browser_extension
+          zip -r ../CyberEthos-extension.zip .
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CyberEthos-extension
+          path: CyberEthos-extension.zip
+
+  release:
+    needs: [build-desktop-app, zip-extension]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: CyberEthos-windows-exe
+          path: ./release
+      - uses: actions/download-artifact@v4
+        with:
+          name: CyberEthos-extension
+          path: ./release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            release/CyberEthos.exe
+            release/CyberEthos-extension.zip
