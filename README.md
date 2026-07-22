@@ -25,3 +25,5 @@ storage, social media, chat apps in-browser) safely and transparently.
   blocking them outright
 - Optional local-only journal entry prompt after the panic button fires,
   for the user's own eyes only, never uploaded anywhere
+
+The purpose of the app is simply to be a helping hand to responsibly explore the vast world of the internet to anyone who wants it, as this app is now available entirely for free on the Microsoft Store! In a rapidly changing digital world, it's important to remember that accountability can still exist and that it starts with you doing the right thing from power on until power off. 
