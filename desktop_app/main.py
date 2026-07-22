@@ -16,6 +16,7 @@ import json
 import random
 import subprocess
 import sys
+import webbrowser
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer
@@ -163,6 +164,16 @@ class CyberEthosApp:
 
         menu.addSeparator()
 
+        learn_action = QAction("Learn about cyber safety", self.app)
+        learn_action.triggered.connect(self.open_learn_page)
+        menu.addAction(learn_action)
+
+        support_action = QAction("Support & get help", self.app)
+        support_action.triggered.connect(self.open_support_page)
+        menu.addAction(support_action)
+
+        menu.addSeparator()
+
         self.network_toggle = QAction("Disconnect network during panic mode", self.app)
         self.network_toggle.setCheckable(True)
         self.network_toggle.setChecked(self.settings["network_cutoff_enabled"])
@@ -188,6 +199,12 @@ class CyberEthosApp:
                 "disconnect ALL network adapters (including calls, other apps, "
                 "downloads) until you reconnect manually."
             )
+
+    def open_learn_page(self):
+        webbrowser.open((APP_DIR / "resources" / "learn.html").as_uri())
+
+    def open_support_page(self):
+        webbrowser.open((APP_DIR / "resources" / "support.html").as_uri())
 
     def show_quote_popup(self):
         quote = random.choice(self.quotes)
