@@ -6,11 +6,11 @@ A lightweight tray app that:
   3. On panic: closes known distraction apps, shows a full-screen calming
      overlay with an affirmation, and (only if the user opts in) disables
      network adapters.
-     Basically encouragement and a reminder that accountability still exists but that you don't need to fear it because you can do the right thing and use it for good.
+     Simply designed to remind the user that accountability does exist but is not something to fear when they use it responsibly.
 
 Requires (see requirements.txt): PySide6, psutil, keyboard, pywin32
 NOTE: the 'keyboard' library needs the app to run as Administrator on Windows
-to reliably catch global hotkeys. This is documented in README.md so users are aware. 
+to reliably catch global hotkeys. This is documented in README.md.
 """
 
 import json
@@ -52,7 +52,7 @@ APP_DIR = resource_dir()
 SETTINGS_PATH = settings_dir() / "settings.json"
 DEFAULT_SETTINGS = {
     "panic_hotkey": "ctrl+alt+p",
-    "network_cutoff_enabled": False,  # opt-in, requires admin 
+    "network_cutoff_enabled": False,  # opt-in, requires admin
     "launch_at_startup": True,
     "panic_trigger_count": 0,
     "distraction_processes": ["chrome.exe", "msedge.exe", "firefox.exe"]
@@ -67,8 +67,10 @@ def set_launch_at_startup(enabled: bool):
     try:
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY_PATH, 0, winreg.KEY_SET_VALUE)
         if enabled:
-            exe_path = sys.executable if getattr(sys, "frozen", False) else \
-                f'"{sys.executable}" "{Path(__file__).resolve()}"'
+            if getattr(sys, "frozen", False):
+                exe_path = f'"{sys.executable}" --startup'
+            else:
+                exe_path = f'"{sys.executable}" "{Path(__file__).resolve()}" --startup'
             winreg.SetValueEx(key, RUN_VALUE_NAME, 0, winreg.REG_SZ, exe_path)
         else:
             try:
@@ -100,7 +102,7 @@ def save_settings(settings):
     with open(SETTINGS_PATH, "w", encoding="utf-8") as f:
         json.dump(settings, f, indent=2)
 
-#maybe revise later
+
 class QuotePopup(QDialog):
     def __init__(self, quote_text):
         super().__init__()
@@ -268,8 +270,13 @@ class CyberEthosApp:
         self.overlay = None
         self.register_hotkey()
 
-        # show boot quote after launch
-        QTimer.singleShot(500, self.show_quote_popup)
+        # Launched by Windows startup (registry entry includes --startup) shows
+        # the quiet boot quote. Launched manually (double-clicked) opens the
+        # full Dashboard instead, since that's presumably what the user wants.
+        if "--startup" in sys.argv:
+            QTimer.singleShot(500, self.show_quote_popup)
+        else:
+            QTimer.singleShot(300, self.open_dashboard)
 
     def build_tray_menu(self):
         menu = QMenu()
@@ -349,7 +356,7 @@ class CyberEthosApp:
         try:
             keyboard.add_hotkey(self.settings["panic_hotkey"], self.trigger_panic)
         except Exception as e:
-            # this could be caused by not running as admin
+            # likely caused because program was run without proper (admin) permissions
             print(f"[CyberEthos] Could not register global hotkey: {e}")
 
     def trigger_panic(self):
